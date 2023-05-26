@@ -1,0 +1,816 @@
+{
+	"info": {
+		"_postman_id": "e2a26b3d-2612-4251-b112-1b25949b3250",
+		"name": "Security CTF - Blue Team Devnet - USB Drive-By Prophylactic Protection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "12505680"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Generate SecureX API Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 200 ) );",
+									"postman.setEnvironmentVariable( '_securex_token', pm.response.json().access_token );",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [ ",
+									"    'securex_host',",
+									"    'securex_client_id',",
+									"    'securex_client_password'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if (!postman.getEnvironmentVariable(item)) varsPresent = false;",
+									"});",
+									"pm.test('Required environment variables: ' + requiredVars.join(', '),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{securex_client_password}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{securex_client_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "client_credentials",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{securex_host}}/iroh/oauth2/token",
+							"host": [
+								"{{securex_host}}"
+							],
+							"path": [
+								"iroh",
+								"oauth2",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Generate Secure Endpoint API Access Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 200 ) );",
+									"postman.setEnvironmentVariable( '_secure_endpoint_token', pm.response.json().access_token );",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [",
+									"    '_securex_token',",
+									"    'secure_endpoint_host'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if (!postman.getEnvironmentVariable(item)) varsPresent = false;",
+									"});",
+									"pm.test('Required environment variables: ' + requiredVars.join(', '),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{_securex_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "https://{{secure_endpoint_host}}/v3/access_tokens",
+							"protocol": "https",
+							"host": [
+								"{{secure_endpoint_host}}"
+							],
+							"path": [
+								"v3",
+								"access_tokens"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Organization Id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 200 ) );",
+									"",
+									"pm.response.json().data.forEach( item => {",
+									"    if (item.name == postman.getEnvironmentVariable( 'secure_endpoint_org' ) )",
+									"        postman.setEnvironmentVariable( '_secure_endpoint_org_id', item.organizationIdentifier )",
+									"});",
+									"",
+									"var template = ",
+									"    `<style type=\"text/css\">",
+									"        .tftable {font-size:14px;color:#00bceb;width:100%;border-width: 1px;border-color: #6ebe4a;border-collapse: collapse;}",
+									"        .tftable th {font-size:14px;background-color:#0d274d;border-width: 1px;padding: 8px;border-style: solid;border-color: #0d274d;text-align:left;}",
+									"        .tftable tr {background-color:#ffffff;}",
+									"        .tftable td {font-size:12px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}",
+									"        .tftable tr:hover {background-color:#f2f2f2;}",
+									"    </style>",
+									"    <table class=\"tftable\" border=\"1\">",
+									"        <tr>",
+									"            <th>Name</th>",
+									"            <th>Organization ID</th>",
+									"        </tr>",
+									"        ",
+									"        {{#each response.data}}",
+									"            <tr>",
+									"                <td>{{name}}</td>",
+									"                <td>{{organizationIdentifier}}</td>",
+									"            </tr>",
+									"        {{/each}}",
+									"    </table>`;",
+									"",
+									"pm.visualizer.set(template, { response: pm.response.json() });"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [",
+									"    'secure_endpoint_host',",
+									"    '_secure_endpoint_token',",
+									"    'secure_endpoint_org'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if (!postman.getEnvironmentVariable(item)) varsPresent = false;",
+									"});",
+									"pm.test('Required environment variables: ' + requiredVars.join(', '),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{secure_endpoint_host}}/v3/organizations?size=100",
+							"protocol": "https",
+							"host": [
+								"{{secure_endpoint_host}}"
+							],
+							"path": [
+								"v3",
+								"organizations"
+							],
+							"query": [
+								{
+									"key": "size",
+									"value": "100"
+								}
+							]
+						},
+						"description": "This request lists all Endpoint ORGs you have access to. If there are multiple ORGS, select the right ORG to be added to the SecureX_ORG variable.\n\n- update the second line based on the number of Endpoint ORGs you have access to\n- remove \\[x\\] in the Test Script if you have access to a single Endpoint ORG\n- Example: postman.setEnvironmentVariable(\"SecureX_ORG\", jsonData.data.organizationIdentifier);\n- you may use [https://jsonpathfinder.com/](https://jsonpathfinder.com/) to figure out the JSON path to your Endpoint ORG"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Device Control",
+			"item": [
+				{
+					"name": "Create Device Control Configuration",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 201 ) );",
+									"",
+									"postman.setEnvironmentVariable( '_secure_endpoint_dcc_id', pm.response.json().data.guid );",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [",
+									"    'secure_endpoint_host',",
+									"    '_secure_endpoint_token',",
+									"    '_secure_endpoint_org_id'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if ( !postman.getEnvironmentVariable( item ) ) varsPresent = false;",
+									"} );",
+									"pm.test( 'Required environment variables: ' + requiredVars.join( ', ' ),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"configuration\": {\n    \"name\": \"{{testDCC_$guid}}\",\n    \"description\": \"REMOVE ME\",\n    \"baseRule\": {\n        //available control types are block/allow/read_write/read_only\n      \"controlType\": \"block\",\n      \"notificationType\": \"never\"\n    }\n   }\n}\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{secure_endpoint_host}}/v3/organizations/{{_secure_endpoint_org_id}}/device_control/configurations",
+							"protocol": "https",
+							"host": [
+								"{{secure_endpoint_host}}"
+							],
+							"path": [
+								"v3",
+								"organizations",
+								"{{_secure_endpoint_org_id}}",
+								"device_control",
+								"configurations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Device Control Configurations",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 200 ) );",
+									"",
+									"var template = ",
+									"    `<style type=\"text/css\">",
+									"        .tftable {font-size:14px;color:#00bceb;width:100%;border-width: 1px;border-color: #6ebe4a;border-collapse: collapse;}",
+									"        .tftable th {font-size:14px;background-color:#0d274d;border-width: 1px;padding: 8px;border-style: solid;border-color: #0d274d;text-align:left;}",
+									"        .tftable tr {background-color:#ffffff;}",
+									"        .tftable td {font-size:12px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}",
+									"        .tftable tr:hover {background-color:#f2f2f2;}",
+									"    </style>",
+									"    <table class=\"tftable\" border=\"1\">",
+									"        <tr>",
+									"            <th>Name</th>",
+									"            <th>GUID</th>",
+									"            <th>Description</th>",
+									"            <th>Base Rule Type</th>",
+									"        </tr>",
+									"        ",
+									"        {{#each response.data}}",
+									"            <tr>",
+									"                <td>{{name}}</td>",
+									"                <td>{{guid}}</td>",
+									"                <td>{{description}}</td>",
+									"                <td>{{baseRule.controlType}}</td>",
+									"            </tr>",
+									"        {{/each}}",
+									"    </table>`;",
+									"",
+									"pm.visualizer.set(template, { response: pm.response.json() });",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [",
+									"    'secure_endpoint_host',",
+									"    '_secure_endpoint_token',",
+									"    '_secure_endpoint_org_id'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if ( !postman.getEnvironmentVariable( item ) ) varsPresent = false;",
+									"} );",
+									"pm.test( 'Required environment variables: ' + requiredVars.join( ', ' ),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{secure_endpoint_host}}/v3/organizations/{{_secure_endpoint_org_id}}/device_control/configurations?size=100",
+							"protocol": "https",
+							"host": [
+								"{{secure_endpoint_host}}"
+							],
+							"path": [
+								"v3",
+								"organizations",
+								"{{_secure_endpoint_org_id}}",
+								"device_control",
+								"configurations"
+							],
+							"query": [
+								{
+									"key": "size",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Policies",
+			"item": [
+				{
+					"name": "List Policies",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 200 ) );",
+									"postman.setEnvironmentVariable( '_secure_endpoint_policy_id', pm.response.json().data[ 0 ].guid );",
+									"",
+									"var template = ",
+									"    `<style type=\"text/css\">",
+									"        .tftable {font-size:14px;color:#00bceb;width:100%;border-width: 1px;border-color: #6ebe4a;border-collapse: collapse;}",
+									"        .tftable th {font-size:14px;background-color:#0d274d;border-width: 1px;padding: 8px;border-style: solid;border-color: #0d274d;text-align:left;}",
+									"        .tftable tr {background-color:#ffffff;}",
+									"        .tftable td {font-size:12px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}",
+									"        .tftable tr:hover {background-color:#f2f2f2;}",
+									"    </style>",
+									"    <table class=\"tftable\" border=\"1\">",
+									"        <tr>",
+									"            <th>Name</th>",
+									"            <th>GUID</th>",
+									"            <th>OS</th>",
+									"            <th>Type</th>",
+									"        </tr>",
+									"        ",
+									"        {{#each response.data}}",
+									"            <tr>",
+									"                <td>{{name}}</td>",
+									"                <td>{{guid}}</td>",
+									"                <td>{{operatingSystem}}</td>",
+									"                <td>{{policyType}}</td>",
+									"            </tr>",
+									"        {{/each}}",
+									"    </table>`;",
+									"",
+									"pm.visualizer.set(template, { response: pm.response.json() });"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [",
+									"    'secure_endpoint_host',",
+									"    '_secure_endpoint_token',",
+									"    '_secure_endpoint_org_id'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if (!postman.getEnvironmentVariable(item)) varsPresent = false;",
+									"});",
+									"pm.test('Required environment variables: ' + requiredVars.join(', '),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{secure_endpoint_host}}/v3/organizations/{{_secure_endpoint_org_id}}/policies?size=100&operatingSystem=windows&search=Protect&policyType=workstation",
+							"protocol": "https",
+							"host": [
+								"{{secure_endpoint_host}}"
+							],
+							"path": [
+								"v3",
+								"organizations",
+								"{{_secure_endpoint_org_id}}",
+								"policies"
+							],
+							"query": [
+								{
+									"key": "size",
+									"value": "100",
+									"description": "Mandatory Parameter"
+								},
+								{
+									"key": "operatingSystem",
+									"value": "windows",
+									"description": "optional search parameter"
+								},
+								{
+									"key": "obtial",
+									"value": "enabled",
+									"description": "optional search parameter",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "Protect",
+									"description": "optional search parameter"
+								},
+								{
+									"key": "policyType",
+									"value": "workstation"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Policy Device Control Configuration",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 204 ) );",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [",
+									"    'secure_endpoint_host',",
+									"    '_secure_endpoint_token',",
+									"    '_secure_endpoint_org_id',",
+									"    '_secure_endpoint_policy_id',",
+									"    '_secure_endpoint_dcc_id'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if ( !postman.getEnvironmentVariable( item ) ) varsPresent = false;",
+									"} );",
+									"pm.test( 'Required environment variables: ' + requiredVars.join( ', ' ),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"configurationGuid\": \"{{_secure_endpoint_dcc_id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://{{secure_endpoint_host}}/v3/organizations/{{_secure_endpoint_org_id}}/policies/{{_secure_endpoint_policy_id}}/device_control_configuration",
+							"protocol": "https",
+							"host": [
+								"{{secure_endpoint_host}}"
+							],
+							"path": [
+								"v3",
+								"organizations",
+								"{{_secure_endpoint_org_id}}",
+								"policies",
+								"{{_secure_endpoint_policy_id}}",
+								"device_control_configuration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "List Policy Device Control Configuration",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 200 ) );",
+									"",
+									"var template = ",
+									"    `<style type=\"text/css\">",
+									"        .tftable {font-size:14px;color:#00bceb;width:100%;border-width: 1px;border-color: #6ebe4a;border-collapse: collapse;}",
+									"        .tftable th {font-size:14px;background-color:#0d274d;border-width: 1px;padding: 8px;border-style: solid;border-color: #0d274d;text-align:left;}",
+									"        .tftable tr {background-color:#ffffff;}",
+									"        .tftable td {font-size:12px;border-width: 1px;padding: 8px;border-style: solid;border-color: #87ceeb;}",
+									"        .tftable tr:hover {background-color:#f2f2f2;}",
+									"    </style>",
+									"    <table class=\"tftable\" border=\"1\">",
+									"        <tr>",
+									"            <th>Name</th>",
+									"            <th>GUID</th>",
+									"            <th>Description</th>",
+									"        </tr>",
+									"        <tr>",
+									"            <td>{{response.name}}</td>",
+									"            <td>{{response.guid}}</td>",
+									"            <td>{{response.description}}</td>",
+									"        </tr>",
+									"    </table>`;",
+									"",
+									"pm.visualizer.set(template, { response: pm.response.json().data });"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [",
+									"    'secure_endpoint_host',",
+									"    '_secure_endpoint_token',",
+									"    '_secure_endpoint_org_id',",
+									"    '_secure_endpoint_policy_id'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if (!postman.getEnvironmentVariable(item)) varsPresent = false;",
+									"});",
+									"pm.test('Required environment variables: ' + requiredVars.join(', '),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://{{secure_endpoint_host}}/v3/organizations/{{_secure_endpoint_org_id}}/policies/{{_secure_endpoint_policy_id}}/device_control_configuration",
+							"protocol": "https",
+							"host": [
+								"{{secure_endpoint_host}}"
+							],
+							"path": [
+								"v3",
+								"organizations",
+								"{{_secure_endpoint_org_id}}",
+								"policies",
+								"{{_secure_endpoint_policy_id}}",
+								"device_control_configuration"
+							],
+							"query": [
+								{
+									"key": "obtial",
+									"value": "enabled",
+									"description": "optional search parameter",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "(Cleanup)",
+			"item": [
+				{
+					"name": "Delete Policy Device Control Configuration",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 204 ) );",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [",
+									"    'secure_endpoint_host',",
+									"    '_secure_endpoint_token',",
+									"    '_secure_endpoint_org_id',",
+									"    '_secure_endpoint_policy_id'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if ( !postman.getEnvironmentVariable( item ) ) varsPresent = false;",
+									"} );",
+									"pm.test( 'Required environment variables: ' + requiredVars.join( ', ' ),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://{{secure_endpoint_host}}/v3/organizations/{{_secure_endpoint_org_id}}/policies/{{_secure_endpoint_policy_id}}/device_control_configuration",
+							"protocol": "https",
+							"host": [
+								"{{secure_endpoint_host}}"
+							],
+							"path": [
+								"v3",
+								"organizations",
+								"{{_secure_endpoint_org_id}}",
+								"policies",
+								"{{_secure_endpoint_policy_id}}",
+								"device_control_configuration"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Device Control Configuration",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 204 ) );",
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"requiredVars = [",
+									"    'secure_endpoint_host',",
+									"    '_secure_endpoint_token',",
+									"    '_secure_endpoint_org_id',",
+									"    '_secure_endpoint_dcc_id'",
+									"];",
+									"",
+									"varsPresent = true;",
+									"requiredVars.forEach( item => {",
+									"    if ( !postman.getEnvironmentVariable( item ) ) varsPresent = false;",
+									"} );",
+									"pm.test( 'Required environment variables: ' + requiredVars.join( ', ' ),",
+									"    () => pm.expect( varsPresent ).to.be.true );"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://{{secure_endpoint_host}}/v3/organizations/{{_secure_endpoint_org_id}}/device_control/configurations/{{_secure_endpoint_dcc_id}}",
+							"protocol": "https",
+							"host": [
+								"{{secure_endpoint_host}}"
+							],
+							"path": [
+								"v3",
+								"organizations",
+								"{{_secure_endpoint_org_id}}",
+								"device_control",
+								"configurations",
+								"{{_secure_endpoint_dcc_id}}"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{_secure_endpoint_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
