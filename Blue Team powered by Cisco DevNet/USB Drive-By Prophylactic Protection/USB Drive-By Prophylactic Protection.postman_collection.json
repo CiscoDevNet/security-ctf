@@ -279,7 +279,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"configuration\": {\n    \"name\": \"{{testDCC_$guid}}\",\n    \"description\": \"REMOVE ME\",\n    \"baseRule\": {\n        //available control types are block/allow/read_write/read_only\n      \"controlType\": \"block\",\n      \"notificationType\": \"never\"\n    }\n   }\n}\n",
+							"raw": "{\n  \"configuration\": {\n    \"name\": \"testDCC_{{$guid}}\",\n    \"description\": \"REMOVE ME\",\n    \"baseRule\": {\n        //available control types are block/allow/read_write/read_only\n      \"controlType\": \"block\",\n      \"notificationType\": \"never\"\n    }\n   }\n}\n",
 							"options": {
 								"raw": {
 									"language": "json"
