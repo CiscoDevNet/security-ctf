@@ -10,14 +10,14 @@
 			"name": "Authentication",
 			"item": [
 				{
-					"name": "Generate SecureX API Access Token",
+					"name": "Generate Cisco XDR API Access Token",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
 									"pm.test( pm.info.requestName, () => pm.response.to.have.status( 200 ) );",
-									"postman.setEnvironmentVariable( '_securex_token', pm.response.json().access_token );",
+									"postman.setEnvironmentVariable( '_ciscoxdr_token', pm.response.json().access_token );",
 									""
 								],
 								"type": "text/javascript"
@@ -28,9 +28,9 @@
 							"script": {
 								"exec": [
 									"requiredVars = [ ",
-									"    'securex_host',",
-									"    'securex_client_id',",
-									"    'securex_client_password'",
+									"    'ciscoxdr_host',",
+									"    'ciscoxdr_client_id',",
+									"    'ciscoxdr_client_password'",
 									"];",
 									"",
 									"varsPresent = true;",
@@ -50,12 +50,12 @@
 							"basic": [
 								{
 									"key": "password",
-									"value": "{{securex_client_password}}",
+									"value": "{{ciscoxdr_client_password}}",
 									"type": "string"
 								},
 								{
 									"key": "username",
-									"value": "{{securex_client_id}}",
+									"value": "{{ciscoxdr_client_id}}",
 									"type": "string"
 								}
 							]
@@ -73,9 +73,9 @@
 							]
 						},
 						"url": {
-							"raw": "{{securex_host}}/iroh/oauth2/token",
+							"raw": "{{ciscoxdr_host}}/iroh/oauth2/token",
 							"host": [
-								"{{securex_host}}"
+								"{{ciscoxdr_host}}"
 							],
 							"path": [
 								"iroh",
@@ -105,7 +105,7 @@
 							"script": {
 								"exec": [
 									"requiredVars = [",
-									"    '_securex_token',",
+									"    '_ciscoxdr_token',",
 									"    'secure_endpoint_host'",
 									"];",
 									"",
@@ -126,7 +126,7 @@
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{_securex_token}}",
+									"value": "{{_ciscoxdr_token}}",
 									"type": "string"
 								}
 							]
@@ -228,8 +228,7 @@
 									"value": "100"
 								}
 							]
-						},
-						"description": "This request lists all Endpoint ORGs you have access to. If there are multiple ORGS, select the right ORG to be added to the SecureX_ORG variable.\n\n- update the second line based on the number of Endpoint ORGs you have access to\n- remove \\[x\\] in the Test Script if you have access to a single Endpoint ORG\n- Example: postman.setEnvironmentVariable(\"SecureX_ORG\", jsonData.data.organizationIdentifier);\n- you may use [https://jsonpathfinder.com/](https://jsonpathfinder.com/) to figure out the JSON path to your Endpoint ORG"
+						}
 					},
 					"response": []
 				}
